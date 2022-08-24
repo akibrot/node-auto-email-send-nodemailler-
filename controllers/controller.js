@@ -1,58 +1,47 @@
-import LISTMODEL from "../models/CreateLIST.js";
-import DATAMODEL from "../models/DataModel.js";
-import TESTIMONIALMODEL from "../models/TestimonialModel.js";
+import nodemailer from "nodemailer";
+import expressAsyncHandler from "express-async-handler";
 export const welcome = (req, res) => {
-  res.send("Server Started");
+  res.send("only for message server");
 };
 // createList
-export const createlist = async (req, res) => {
-  const name = req.body.LISTNAME;
-  let numb = 0;
-  if (name) {
-    numb++;
+//sendauto email for password recovery
+
+export const sendemailauto = expressAsyncHandler(async (req, res) => {
+  console.log("routereched")
+  console.log(req.body.Email);
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+  });
+
+  const mailOptions = {
+
+    to: process.env.EMAIL,
+    subject: "Contact From Portofolio Site",
+    html: `<div>
+    <h1>Portofolio site alert Check</h1>
+    ${req.body.Email}
+      <p>
+      ${req.body.Desc}
+      </p>
+      
+      </div>`,
+  };
+
+  try {
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        res.status(404).send("email invalid");
+      } else {
+        res.status(200).send("email sent" + info.response);
+      }
+    });
+  } catch (error) {
+    res.status(404).send("email invalid");
   }
-  const save = await new LISTMODEL({ title: name });
-  const saved = await save.save();
-  if (saved) {
-    res.send("saved");
-  }
-};
-//getalllist
-
-export const getalllist = async (req, res) => {
-  const alllist = await LISTMODEL.find();
-  res.send(alllist);
-};
-
-export const listdeletehandler = async (req, res) => {
-  const id = req.body.id;
-  await LISTMODEL.findByIdAndDelete(id);
-  res.send("deleted");
-};
-
-//create data
-
-export const createdata = async (req, res) => {
-  console.log(req.body.senddata);
-  const savedata = await DATAMODEL(req.body.senddata);
-  res.send("saved");
-  await savedata.save();
-};
-
-//getalldata
-export const getalldata = async (req, res) => {
-  const alldata = await DATAMODEL.find();
-  res.send(alldata);
-};
-
-export const createtestimonial = async (req, res) => {
-  const testimonialdata = req.body.senddata;
-  const savedata = await TESTIMONIALMODEL(testimonialdata);
-  await savedata.save();
-  res.send("saved");
-};
-
-export const getalltestimonials = async (req, res) => {
-  const alldata = await TESTIMONIALMODEL.find();
-  res.send(alldata);
-};
+});
